@@ -1,20 +1,20 @@
-# Agregator de știri folosind Java Threads
+# News Aggregator using Java Threads
 
-Tema 1 – Algoritmi Paraleli și Distribuiți (APD)  
+Assignment 1 – Parallel and Distributed Algorithms (APD)
 
-Agregator paralel de articole de știri (JSON) implementat în Java cu thread-uri. Programul citește articolele, elimină duplicatele, le grupează pe categorii și limbi și generează statistici.
+A parallel news article aggregator (JSON) implemented in Java using threads. The program reads the articles, removes duplicates, groups them by category and language, and generates statistics.
 
-## Structură
+## Structure
 
-| Fișier | Descriere |
+| File | Description |
 |---|---|
-| `Tema1.java` | Programul principal și thread-urile worker |
-| `Article.java` | Modelul unui articol (mapare JSON cu Jackson) |
-| `Makefile` | Compilare / rulare / curățare |
-| `libs/` | Bibliotecile Jackson 2.17.0 (core, annotations, databind) |
-| `README.pdf` | Documentația detaliată a temei |
+| `Tema1.java` | Main program and worker threads |
+| `Article.java` | Article model (JSON mapping with Jackson) |
+| `Makefile` | Build / run / clean |
+| `libs/` | Jackson 2.17.0 libraries (core, annotations, databind) |
+| `README.pdf` | Detailed assignment documentation |
 
-## Compilare și rulare
+## Build and run
 
 ```bash
 make build
@@ -22,26 +22,26 @@ make run ARGS="<num_threads> <articles_file> <inputs_file>"
 make clean
 ```
 
-- `articles_file` – prima linie e numărul de fișiere, apoi căile către fișierele JSON cu articole.
-- `inputs_file` – conține căile către fișierele cu limbi, categorii și stop words.
+- `articles_file` – the first line is the number of files, followed by the paths to the JSON article files.
+- `inputs_file` – contains the paths to the languages, categories and stop words files.
 
-## Implementare
+## Implementation
 
-Fișierele de articole sunt împărțite în bucăți egale între `N` thread-uri. Procesarea are două faze, separate de un `CyclicBarrier`:
+The article files are split into equal chunks among `N` threads. Processing has two phases, separated by a `CyclicBarrier`:
 
-1. **Citire** – fiecare thread parsează fișierele sale și numără aparițiile fiecărui `uuid` și `title` în `ConcurrentHashMap<String, AtomicInteger>`.
-2. **Procesare** – după barieră, toate duplicatele sunt cunoscute. Un articol e considerat duplicat dacă `uuid`-ul sau titlul apare de mai multe ori. Pentru articolele unice:
-   - se numără autorii, limbile și categoriile (valide);
-   - se grupează UUID-urile pe limbă/categorie în map-uri locale, unite la final în cele globale (reduce contenția);
-   - se determină cel mai recent articol (verificare dublă într-un bloc `synchronized`);
-   - pentru articolele în engleză se numără cuvintele cheie (fără stop words, o dată per articol).
+1. **Reading** – each thread parses its files and counts the occurrences of each `uuid` and `title` in a `ConcurrentHashMap<String, AtomicInteger>`.
+2. **Processing** – after the barrier, all duplicates are known. An article is considered a duplicate if its `uuid` or title appears more than once. For unique articles:
+   - authors, languages and (valid) categories are counted;
+   - UUIDs are grouped by language/category in local maps, merged into the global ones at the end (reduces contention);
+   - the most recent article is determined (double-checked inside a `synchronized` block);
+   - for English articles, keywords are counted (excluding stop words, once per article).
 
-Sincronizare: `ConcurrentHashMap`, `AtomicInteger`, `Collections.synchronizedList`, `CyclicBarrier` și un lock dedicat pentru cel mai recent articol.
+Synchronization: `ConcurrentHashMap`, `AtomicInteger`, `Collections.synchronizedList`, `CyclicBarrier` and a dedicated lock for the most recent article.
 
-## Fișiere de ieșire
+## Output files
 
-- `all_articles.txt` – articolele unice, sortate descrescător după dată, apoi după UUID
-- `<categorie>.txt` – UUID-urile din fiecare categorie (virgulele eliminate, spațiile înlocuite cu `_`)
-- `<limba>.txt` – UUID-urile pentru fiecare limbă
-- `keywords_count.txt` – cuvintele cheie din articolele în engleză, după frecvență
+- `all_articles.txt` – unique articles, sorted by date (descending), then by UUID
+- `<category>.txt` – UUIDs for each category (commas removed, whitespace replaced with `_`)
+- `<language>.txt` – UUIDs for each language
+- `keywords_count.txt` – keywords from English articles, sorted by frequency
 - `reports.txt` – `duplicates_found`, `unique_articles`, `best_author`, `top_language`, `top_category`, `most_recent_article`, `top_keyword_en`
