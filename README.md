@@ -1,7 +1,6 @@
 # Agregator de știri folosind Java Threads
 
 Tema 1 – Algoritmi Paraleli și Distribuiți (APD)  
-Autor: **Ciurea Ana-Sorina**
 
 Agregator paralel de articole de știri (JSON) implementat în Java cu thread-uri. Programul citește articolele, elimină duplicatele, le grupează pe categorii și limbi și generează statistici.
 
